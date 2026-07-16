@@ -43,7 +43,7 @@
     padding:20px;
     margin-bottom:28px;
   }
-  .search-row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;}
+  .search-row{display:grid;grid-template-columns:1fr 1fr 160px auto;gap:12px;}
   @media (max-width:640px){.search-row{grid-template-columns:1fr;}}
   .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;}
   .field input, .field select{
@@ -94,6 +94,17 @@
     border-radius:4px;
   }
   .no-match{padding:9px 12px;font-size:13px;color:var(--muted);}
+
+  .status-msg{
+    margin-bottom:16px;
+    padding:12px 16px;
+    border-radius:8px;
+    font-size:13px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--muted);
+  }
+  .status-msg.error{color:var(--coral);border-color:var(--coral-dim);}
   .search-btn{
     background:var(--amber);
     color:#2B1E00;
@@ -237,9 +248,15 @@
         <input id="destino" type="text" placeholder="Qualquer lugar" autocomplete="off" />
         <div class="suggestions" id="destinoSuggestions"></div>
       </div>
+      <div class="field">
+        <label for="dataIda">Data de ida</label>
+        <input id="dataIda" type="date" />
+      </div>
       <button class="search-btn" id="btnBuscar">Buscar ofertas</button>
     </div>
   </div>
+
+  <div class="status-msg" id="statusMsg" style="display:none;"></div>
 
   <div class="toolbar">
     <span class="count" id="countLabel">6 ofertas encontradas</span>
@@ -256,7 +273,7 @@
   <div class="empty" id="empty" style="display:none;">Nenhuma oferta para essa origem ainda. Tenta limpar o filtro.</div>
 
   <div class="disclaimer">
-    <strong>Sobre este protótipo:</strong> os preços acima são dados de exemplo, só para mostrar como o app vai funcionar. Não existe uma API pública e gratuita que dê acesso a passagens reais de última hora de todas as companhias — as opções reais (Duffel, Amadeus, Kiwi) exigem uma chave de API. O próximo passo é você criar uma conta grátis num desses provedores (o modo de teste/sandbox é gratuito) e eu troco os dados de exemplo pelos dados reais.
+    <strong>Sobre este app:</strong> ao escolher origem + data e clicar em "Buscar ofertas", ele já consulta a Duffel de verdade (modo sandbox/teste — os preços ainda são fictícios, não passagens reais). Sem preencher data, ele mostra os exemplos ilustrativos. Os links de "Reservar" ficam ativos quando a etapa de checkout ou afiliado for conectada.
   </div>
 
 </div>
@@ -439,10 +456,23 @@ function render(list){
   countLabel.textContent = list.length + (list.length === 1 ? ' oferta encontrada' : ' ofertas encontradas');
 
   list.forEach(d => {
-    const pct = discountPct(d.oldPrice, d.newPrice);
+    const isReal = d.isReal === true;
     const bookButton = d.bookingUrl
       ? `<a class="book-btn" href="${d.bookingUrl}" target="_blank" rel="noopener">Reservar essa oferta</a>`
-      : `<button class="book-btn disabled" disabled title="Disponível quando o app estiver conectado a dados reais">Reservar essa oferta</button>`;
+      : `<button class="book-btn disabled" disabled title="Link de reserva chega na próxima etapa (checkout ou afiliado)">Reservar essa oferta</button>`;
+
+    const priceBlock = isReal
+      ? `<span class="new-price">${formatBRL(d.newPrice)}</span>`
+      : `<div class="price-block">
+          <span class="old-price">${formatBRL(d.oldPrice)}</span>
+          <span class="new-price">${formatBRL(d.newPrice)}</span>
+        </div>`;
+
+    const discountBadge = isReal ? '' : `<div class="discount-badge">-${discountPct(d.oldPrice, d.newPrice)}%</div>`;
+    const expiresBlock = isReal
+      ? `<div class="expires">tarifa ao vivo</div>`
+      : `<div class="expires"><span class="dot"></span>expira em ${d.expiresHours}h</div>`;
+
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -451,15 +481,12 @@ function render(list){
           <div class="route">${d.origin}<span class="arrow">&rarr;</span>${d.destination}</div>
           <div class="airline">${d.airline}</div>
         </div>
-        <div class="discount-badge">-${pct}%</div>
+        ${discountBadge}
       </div>
-      <div class="dates"><i>Ida ${d.depart}</i>&middot;<i>Volta ${d.ret}</i></div>
+      <div class="dates"><i>Ida ${d.depart}</i>${d.ret ? `&middot;<i>Volta ${d.ret}</i>` : ''}</div>
       <div class="price-row">
-        <div class="price-block">
-          <span class="old-price">${formatBRL(d.oldPrice)}</span>
-          <span class="new-price">${formatBRL(d.newPrice)}</span>
-        </div>
-        <div class="expires"><span class="dot"></span>expira em ${d.expiresHours}h</div>
+        ${priceBlock}
+        ${expiresBlock}
       </div>
       ${bookButton}
     `;
@@ -467,26 +494,106 @@ function render(list){
   });
 }
 
-function applyFilters(){
-  const origem = document.getElementById('origem').value.trim().toLowerCase();
-  const destino = document.getElementById('destino').value.trim().toLowerCase();
+function setStatus(message, isError){
+  const box = document.getElementById('statusMsg');
+  if(!message){
+    box.style.display = 'none';
+    return;
+  }
+  box.textContent = message;
+  box.className = 'status-msg' + (isError ? ' error' : '');
+  box.style.display = 'block';
+}
+
+function extractCode(fieldValue){
+  const match = fieldValue.match(/\(([A-Z]{3})\)/);
+  return match ? match[1] : fieldValue.trim().toUpperCase();
+}
+
+async function applyFilters(){
+  const origemVal = document.getElementById('origem').value.trim();
+  const destinoVal = document.getElementById('destino').value.trim();
+  const dataVal = document.getElementById('dataIda').value;
   const sortBy = document.getElementById('sortSelect').value;
 
-  let list = dealsData.filter(d => {
-    const okOrigem = !origem || d.origin.toLowerCase().includes(origem);
-    const okDestino = !destino || d.destination.toLowerCase().includes(destino);
-    return okOrigem && okDestino;
-  });
-
-  if(sortBy === 'preco'){
-    list = list.slice().sort((a,b) => a.newPrice - b.newPrice);
-  } else if(sortBy === 'desconto'){
-    list = list.slice().sort((a,b) => discountPct(b.oldPrice,b.newPrice) - discountPct(a.oldPrice,a.newPrice));
-  } else if(sortBy === 'partida'){
-    list = list.slice().sort((a,b) => a.expiresHours - b.expiresHours);
+  // Sem origem + data preenchidas, mostra os exemplos locais (não dá pra buscar de verdade sem isso)
+  if(!origemVal || !dataVal){
+    setStatus(null);
+    let list = dealsData.filter(d => {
+      const okOrigem = !origemVal || d.origin.toLowerCase().includes(origemVal.toLowerCase());
+      const okDestino = !destinoVal || d.destination.toLowerCase().includes(destinoVal.toLowerCase());
+      return okOrigem && okDestino;
+    });
+    list = sortList(list, sortBy);
+    render(list);
+    return;
   }
 
-  render(list);
+  setStatus('Buscando ofertas reais...', false);
+  document.getElementById('btnBuscar').disabled = true;
+
+  try {
+    const response = await fetch('/.netlify/functions/search-flights', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        origin: extractCode(origemVal),
+        destination: destinoVal ? extractCode(destinoVal) : undefined,
+        departureDate: dataVal,
+      }),
+    });
+
+    const data = await response.json();
+
+    if(!response.ok){
+      throw new Error(data.error || 'Erro na busca');
+    }
+
+    let offers = (data.offers || []).map(o => ({
+      origin: o.origin,
+      destination: o.destination,
+      airline: o.airline || 'Companhia não informada',
+      depart: o.depart ? new Date(o.depart).toLocaleString('pt-BR') : '-',
+      ret: null,
+      newPrice: o.price,
+      bookingUrl: o.bookingUrl,
+      isReal: true,
+      expiresHours: 0,
+      oldPrice: null,
+    }));
+
+    offers = sortList(offers, sortBy);
+
+    if(offers.length === 0){
+      setStatus('Nenhuma oferta encontrada pra essa busca no sandbox da Duffel. Tenta outra data ou rota.', true);
+    } else {
+      setStatus(`${offers.length} ofertas reais encontradas (modo sandbox/teste da Duffel).`, false);
+    }
+    render(offers);
+
+  } catch (err) {
+    setStatus('Não consegui buscar dados reais agora (' + err.message + '). Mostrando os exemplos por enquanto.', true);
+    let list = dealsData;
+    render(sortList(list, sortBy));
+  } finally {
+    document.getElementById('btnBuscar').disabled = false;
+  }
+}
+
+function sortList(list, sortBy){
+  list = list.slice();
+  if(sortBy === 'preco'){
+    list.sort((a,b) => a.newPrice - b.newPrice);
+  } else if(sortBy === 'desconto'){
+    list.sort((a,b) => {
+      const da = a.oldPrice ? discountPct(a.oldPrice, a.newPrice) : 0;
+      const db = b.oldPrice ? discountPct(b.oldPrice, b.newPrice) : 0;
+      return db - da;
+    });
+  } else if(sortBy === 'partida'){
+    list.sort((a,b) => (a.expiresHours || 0) - (b.expiresHours || 0));
+  }
+  return list;
 }
 
 document.getElementById('btnBuscar').addEventListener('click', applyFilters);
