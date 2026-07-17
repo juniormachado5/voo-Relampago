@@ -281,7 +281,7 @@
   <div class="empty" id="empty" style="display:none;">Nenhuma oferta para essa origem ainda. Tenta limpar o filtro.</div>
 
   <div class="disclaimer">
-    <strong>Sobre este app:</strong> ao escolher origem + data e clicar em "Buscar ofertas", ele já consulta a Duffel de verdade (modo sandbox/teste — os preços ainda são fictícios, não passagens reais). Sem preencher data, ele mostra os exemplos ilustrativos. Os links de "Reservar" ficam ativos quando a etapa de checkout ou afiliado for conectada.
+    <strong>Sobre este app:</strong> ao escolher origem + destino + data e clicar em "Buscar ofertas", ele já consulta a Duffel de verdade (modo sandbox/teste — os preços ainda são fictícios) e o botão "Reservar" já leva pra uma busca real no Aviasales, com comissão de afiliado configurada. Sem preencher os campos, ele mostra os exemplos ilustrativos.
   </div>
 
 </div>
@@ -518,6 +518,15 @@ function extractCode(fieldValue){
   return match ? match[1] : fieldValue.trim().toUpperCase();
 }
 
+function buildAffiliateUrl(origin, destination, isoDate){
+  if(!origin || !destination || !isoDate) return null;
+  const [year, month, day] = isoDate.split('-');
+  const ddmm = day + month;
+  const searchPath = `${origin}${ddmm}${destination}1`;
+  const target = `https://www.aviasales.com/search/${searchPath}`;
+  return `https://tp.media/r?campaign_id=100&marker=752265&p=4114&trs=551566&u=${encodeURIComponent(target)}`;
+}
+
 async function applyFilters(){
   const origemVal = document.getElementById('origem').value.trim();
   const destinoVal = document.getElementById('destino').value.trim();
@@ -564,7 +573,7 @@ async function applyFilters(){
       depart: o.depart ? new Date(o.depart).toLocaleString('pt-BR') : '-',
       ret: null,
       newPrice: o.price,
-      bookingUrl: o.bookingUrl,
+      bookingUrl: buildAffiliateUrl(o.origin, o.destination, dataVal),
       isReal: true,
       expiresHours: 0,
       oldPrice: null,
