@@ -16,16 +16,17 @@
 </script>
 <style>
   :root{
-    --bg:#0B1220;
-    --surface:#131C2E;
-    --surface-2:#1B2740;
-    --amber:#FFC93C;
-    --amber-dim:#4A3C14;
+    --bg:#0A1830;
+    --surface:#112445;
+    --surface-2:#173056;
+    --blue:#2E8CFF;
+    --blue-dim:#153259;
+    --blue-bright:#5BA6FF;
     --coral:#FF6B4A;
     --coral-dim:#432017;
-    --text:#F2F4F8;
-    --muted:#7C8AA5;
-    --line:#26314A;
+    --text:#F2F5FA;
+    --muted:#7E93B8;
+    --line:#20365C;
   }
   *{box-sizing:border-box;}
   body{
@@ -35,28 +36,60 @@
     font-family:'Inter',sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 80px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px;}
 
   /* Header */
-  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
-  .bolt{width:26px;height:26px;flex-shrink:0;}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;cursor:pointer;width:fit-content;}
+  .brand:hover .bolt{transform:rotate(-8deg);}
+  .bolt{width:26px;height:26px;flex-shrink:0;transition:transform .15s ease;}
   .brand h1{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin:0;letter-spacing:-0.01em;}
-  .tagline{color:var(--muted);font-size:14px;margin:0 0 28px;}
+  .header-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+  .tagline{color:var(--muted);font-size:14px;margin:0 0 24px;}
+
+  .home-btn{
+    display:none;
+    align-items:center;gap:6px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:13px;font-weight:500;
+    padding:8px 14px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .home-btn:hover{border-color:var(--blue);}
+  .home-btn.visible{display:flex;}
 
   /* Search panel */
   .search{
-    background:var(--surface);
+    background:linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
     border:1px solid var(--line);
-    border-radius:14px;
-    padding:20px;
+    border-radius:16px;
+    padding:22px;
     margin-bottom:28px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
   }
-  .search-row{display:grid;grid-template-columns:1fr 1fr 160px auto;gap:12px;}
-  @media (max-width:640px){.search-row{grid-template-columns:1fr;}}
+
+  .trip-type{display:flex;gap:8px;margin-bottom:16px;}
+  .trip-type label{
+    display:flex;align-items:center;gap:6px;
+    font-size:13px;color:var(--muted);cursor:pointer;
+    padding:7px 14px;border-radius:20px;border:1px solid var(--line);
+    transition:all .15s ease;
+  }
+  .trip-type input{accent-color:var(--blue);}
+  .trip-type label.active{color:var(--text);border-color:var(--blue);background:var(--blue-dim);}
+
+  .search-row{display:grid;grid-template-columns:1fr 1fr 140px 140px auto;gap:12px;align-items:end;}
+  @media (max-width:800px){.search-row{grid-template-columns:1fr 1fr;}}
+  @media (max-width:480px){.search-row{grid-template-columns:1fr;}}
+
+  .field{position:relative;}
   .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;}
   .field input, .field select{
     width:100%;
-    background:var(--surface-2);
+    background:var(--bg);
     border:1px solid var(--line);
     border-radius:8px;
     color:var(--text);
@@ -66,9 +99,27 @@
     height:40px;
   }
   .field input::placeholder{color:var(--muted);}
+  .field input:focus, .field input:focus-visible{outline:none;border-color:var(--blue);}
+
+  .search-btn{
+    background:linear-gradient(135deg, var(--blue) 0%, #1568D6 100%);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    padding:0 26px;
+    height:40px;
+    cursor:pointer;
+    white-space:nowrap;
+    box-shadow:0 4px 14px rgba(46,140,255,0.35);
+  }
+  .search-btn:hover{filter:brightness(1.08);}
+  .search-btn:active{transform:scale(0.98);}
+  .search-btn:disabled{opacity:0.6;cursor:wait;}
 
   /* Autocomplete de aeroportos */
-  .field{position:relative;}
   .suggestions{
     position:absolute;
     top:calc(100% + 4px);
@@ -77,10 +128,11 @@
     background:var(--surface-2);
     border:1px solid var(--line);
     border-radius:8px;
-    max-height:220px;
+    max-height:240px;
     overflow-y:auto;
     z-index:10;
     display:none;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
   }
   .suggestions.open{display:block;}
   .suggestion-item{
@@ -91,13 +143,13 @@
     cursor:pointer;
     font-size:14px;
   }
-  .suggestion-item:hover, .suggestion-item.active{background:var(--surface);}
+  .suggestion-item:hover, .suggestion-item.active{background:var(--blue-dim);}
   .suggestion-city{color:var(--text);}
   .suggestion-code{
     font-family:'IBM Plex Mono',monospace;
     font-size:12px;
-    color:var(--amber);
-    background:var(--amber-dim);
+    color:var(--blue-bright);
+    background:var(--blue-dim);
     padding:2px 6px;
     border-radius:4px;
   }
@@ -113,24 +165,8 @@
     color:var(--muted);
   }
   .status-msg.error{color:var(--coral);border-color:var(--coral-dim);}
-  .search-btn{
-    background:var(--amber);
-    color:#2B1E00;
-    border:none;
-    border-radius:8px;
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:14px;
-    padding:0 22px;
-    height:40px;
-    margin-top:22px;
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  .search-btn:hover{background:#ffd35c;}
-  .search-btn:active{transform:scale(0.98);}
 
-  /* Sort bar */
+  /* Toolbar */
   .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
   .count{font-size:13px;color:var(--muted);}
   .sort select{
@@ -153,9 +189,9 @@
     padding:16px 18px;
     position:relative;
     overflow:hidden;
-    transition:border-color .15s ease;
+    transition:border-color .15s ease, transform .15s ease;
   }
-  .card:hover{border-color:#3a496e;}
+  .card:hover{border-color:var(--blue);transform:translateY(-2px);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
   .route{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;}
   .route .arrow{color:var(--muted);margin:0 6px;font-weight:500;}
@@ -176,7 +212,7 @@
   .price-row{display:flex;align-items:baseline;justify-content:space-between;border-top:1px dashed var(--line);padding-top:12px;}
   .price-block{display:flex;align-items:baseline;gap:8px;}
   .old-price{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);text-decoration:line-through;}
-  .new-price{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--amber);}
+  .new-price{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--blue-bright);}
   .expires{
     font-family:'IBM Plex Mono',monospace;
     font-size:11px;
@@ -194,8 +230,8 @@
     text-align:center;
     text-decoration:none;
     margin-top:12px;
-    background:var(--amber);
-    color:#2B1E00;
+    background:linear-gradient(135deg, var(--blue) 0%, #1568D6 100%);
+    color:#fff;
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
     font-size:13px;
@@ -204,7 +240,7 @@
     padding:10px 0;
     cursor:pointer;
   }
-  .book-btn:hover{background:#ffd35c;}
+  .book-btn:hover{filter:brightness(1.08);}
   .book-btn:active{transform:scale(0.98);}
   .book-btn.disabled{
     background:var(--surface-2);
@@ -236,15 +272,23 @@
 <body>
 <div class="wrap">
 
-  <div class="brand">
-    <svg class="bolt" viewBox="0 0 24 24" fill="none">
-      <path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" fill="#FFC93C"/>
-    </svg>
-    <h1>Voo Relâmpago</h1>
+  <div class="header-row">
+    <div class="brand" id="brandHome">
+      <svg class="bolt" viewBox="0 0 24 24" fill="none">
+        <path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" fill="#2E8CFF"/>
+      </svg>
+      <h1>Voo Relâmpago</h1>
+    </div>
+    <button class="home-btn" id="homeBtn">&larr; Nova busca</button>
   </div>
   <p class="tagline">Ofertas de última hora que as companhias aéreas precisam vender agora</p>
 
   <div class="search">
+    <div class="trip-type">
+      <label id="labelOneWay"><input type="radio" name="tripType" value="oneway" checked> Somente ida</label>
+      <label id="labelRoundtrip"><input type="radio" name="tripType" value="roundtrip"> Ida e volta</label>
+    </div>
+
     <div class="search-row">
       <div class="field">
         <label for="origem">Saindo de</label>
@@ -252,13 +296,17 @@
         <div class="suggestions" id="origemSuggestions"></div>
       </div>
       <div class="field">
-        <label for="destino">Indo para (opcional)</label>
-        <input id="destino" type="text" placeholder="Qualquer lugar" autocomplete="off" />
+        <label for="destino">Indo para</label>
+        <input id="destino" type="text" placeholder="Cidade ou aeroporto" autocomplete="off" />
         <div class="suggestions" id="destinoSuggestions"></div>
       </div>
       <div class="field">
         <label for="dataIda">Data de ida</label>
         <input id="dataIda" type="date" />
+      </div>
+      <div class="field" id="campoVolta" style="display:none;">
+        <label for="dataVolta">Data de volta</label>
+        <input id="dataVolta" type="date" />
       </div>
       <button class="search-btn" id="btnBuscar">Buscar ofertas</button>
     </div>
@@ -296,8 +344,8 @@ const dealsData = [
   {origin:"Congonhas (CGH)", destination:"Porto Alegre (POA)", airline:"Azul", depart:"16 jul", ret:"18 jul", oldPrice:590, newPrice:249, expiresHours:5, bookingUrl:null},
 ];
 
-const airports = [
-  // Brasil
+// Lista estática de reserva (fallback caso a busca dinâmica da Duffel falhe ou demore)
+const fallbackAirports = [
   {city:"Guarulhos, São Paulo", code:"GRU"},
   {city:"Congonhas, São Paulo", code:"CGH"},
   {city:"Viracopos, Campinas", code:"VCP"},
@@ -309,137 +357,11 @@ const airports = [
   {city:"Florianópolis", code:"FLN"},
   {city:"Porto Alegre", code:"POA"},
   {city:"Brasília", code:"BSB"},
-  {city:"Belo Horizonte - Confins", code:"CNF"},
-  {city:"Curitiba", code:"CWB"},
-  {city:"Belém", code:"BEL"},
-  {city:"Manaus", code:"MAO"},
-  {city:"Goiânia", code:"GYN"},
-  {city:"Natal", code:"NAT"},
-  {city:"Vitória", code:"VIX"},
-  {city:"Maceió", code:"MCZ"},
-  {city:"João Pessoa", code:"JPA"},
-  {city:"Cuiabá", code:"CGB"},
-  {city:"Foz do Iguaçu", code:"IGU"},
-  // América do Sul
   {city:"Buenos Aires - Ezeiza", code:"EZE"},
-  {city:"Buenos Aires - Aeroparque", code:"AEP"},
-  {city:"Santiago", code:"SCL"},
-  {city:"Montevidéu", code:"MVD"},
-  {city:"Assunção", code:"ASU"},
-  {city:"Lima", code:"LIM"},
-  {city:"Bogotá", code:"BOG"},
-  {city:"Cartagena", code:"CTG"},
-  {city:"Quito", code:"UIO"},
-  {city:"Caracas", code:"CCS"},
-  {city:"La Paz", code:"LPB"},
-  // América do Norte
-  {city:"Nova York - JFK", code:"JFK"},
-  {city:"Nova York - Newark", code:"EWR"},
-  {city:"Miami", code:"MIA"},
-  {city:"Orlando", code:"MCO"},
-  {city:"Los Angeles", code:"LAX"},
-  {city:"São Francisco", code:"SFO"},
-  {city:"Chicago", code:"ORD"},
-  {city:"Boston", code:"BOS"},
-  {city:"Atlanta", code:"ATL"},
-  {city:"Dallas", code:"DFW"},
-  {city:"Las Vegas", code:"LAS"},
-  {city:"Toronto", code:"YYZ"},
-  {city:"Vancouver", code:"YVR"},
-  {city:"Cidade do México", code:"MEX"},
-  {city:"Cancún", code:"CUN"},
-  {city:"Panamá", code:"PTY"},
-  // Europa
   {city:"Lisboa", code:"LIS"},
-  {city:"Porto", code:"OPO"},
-  {city:"Madri", code:"MAD"},
-  {city:"Barcelona", code:"BCN"},
-  {city:"Paris - CDG", code:"CDG"},
-  {city:"Londres - Heathrow", code:"LHR"},
-  {city:"Londres - Gatwick", code:"LGW"},
-  {city:"Roma", code:"FCO"},
-  {city:"Milão", code:"MXP"},
-  {city:"Amsterdã", code:"AMS"},
-  {city:"Frankfurt", code:"FRA"},
-  {city:"Munique", code:"MUC"},
-  {city:"Berlim", code:"BER"},
-  {city:"Zurique", code:"ZRH"},
-  {city:"Genebra", code:"GVA"},
-  {city:"Bruxelas", code:"BRU"},
-  {city:"Viena", code:"VIE"},
-  {city:"Dublin", code:"DUB"},
-  {city:"Copenhague", code:"CPH"},
-  {city:"Estocolmo", code:"ARN"},
-  {city:"Oslo", code:"OSL"},
-  {city:"Atenas", code:"ATH"},
-  {city:"Istambul", code:"IST"},
-  {city:"Moscou", code:"SVO"},
-  {city:"Varsóvia", code:"WAW"},
-  // Ásia e Oceania
-  {city:"Dubai", code:"DXB"},
-  {city:"Doha", code:"DOH"},
-  {city:"Tóquio - Narita", code:"NRT"},
-  {city:"Tóquio - Haneda", code:"HND"},
-  {city:"Pequim", code:"PEK"},
-  {city:"Xangai", code:"PVG"},
-  {city:"Hong Kong", code:"HKG"},
-  {city:"Seul", code:"ICN"},
-  {city:"Singapura", code:"SIN"},
-  {city:"Banguecoque", code:"BKK"},
-  {city:"Bali - Denpasar", code:"DPS"},
-  {city:"Mumbai", code:"BOM"},
-  {city:"Nova Délhi", code:"DEL"},
-  {city:"Sydney", code:"SYD"},
-  {city:"Melbourne", code:"MEL"},
-  {city:"Auckland", code:"AKL"},
-  // África
-  {city:"Joanesburgo", code:"JNB"},
-  {city:"Cidade do Cabo", code:"CPT"},
-  {city:"Cairo", code:"CAI"},
-  {city:"Casablanca", code:"CMN"},
-  {city:"Adis Abeba", code:"ADD"},
+  {city:"Nova York - JFK", code:"JFK"},
+  {city:"Miami", code:"MIA"},
 ];
-
-function setupAutocomplete(inputId, boxId){
-  const input = document.getElementById(inputId);
-  const box = document.getElementById(boxId);
-
-  function close(){
-    box.classList.remove('open');
-    box.innerHTML = '';
-  }
-
-  function open(query){
-    const q = query.trim().toLowerCase();
-    const matches = q ? airports.filter(a =>
-      a.city.toLowerCase().includes(q) || a.code.toLowerCase().includes(q)
-    ) : airports;
-
-    if(matches.length === 0){
-      box.innerHTML = '<div class="no-match">Nenhum aeroporto encontrado</div>';
-    } else {
-      box.innerHTML = matches.slice(0, 8).map(a =>
-        `<div class="suggestion-item" data-city="${a.city}" data-code="${a.code}">
-          <span class="suggestion-city">${a.city}</span>
-          <span class="suggestion-code">${a.code}</span>
-        </div>`
-      ).join('');
-    }
-    box.classList.add('open');
-  }
-
-  input.addEventListener('focus', () => open(input.value));
-  input.addEventListener('input', () => open(input.value));
-  input.addEventListener('blur', () => setTimeout(close, 150));
-
-  box.addEventListener('mousedown', (e) => {
-    const item = e.target.closest('.suggestion-item');
-    if(!item) return;
-    input.value = `${item.dataset.city} (${item.dataset.code})`;
-    close();
-    applyFilters();
-  });
-}
 
 function discountPct(oldP, newP){
   return Math.round((1 - newP / oldP) * 100);
@@ -449,6 +371,126 @@ function formatBRL(v){
   return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:0});
 }
 
+function setStatus(message, isError){
+  const box = document.getElementById('statusMsg');
+  if(!message){
+    box.style.display = 'none';
+    return;
+  }
+  box.textContent = message;
+  box.className = 'status-msg' + (isError ? ' error' : '');
+  box.style.display = 'block';
+}
+
+function extractCode(fieldValue){
+  const match = fieldValue.match(/\(([A-Z]{3})\)/);
+  return match ? match[1] : fieldValue.trim().toUpperCase();
+}
+
+function buildAffiliateUrl(origin, destination, departDate, returnDate){
+  if(!origin || !destination || !departDate) return null;
+  const [y1, m1, d1] = departDate.split('-');
+  const ddmm1 = d1 + m1;
+  let searchPath = `${origin}${ddmm1}${destination}`;
+  if(returnDate){
+    const [y2, m2, d2] = returnDate.split('-');
+    searchPath += (d2 + m2);
+  }
+  searchPath += '1';
+  const target = `https://www.aviasales.com/search/${searchPath}`;
+  return `https://tp.media/r?campaign_id=100&marker=752265&p=4114&trs=551566&u=${encodeURIComponent(target)}`;
+}
+
+/* ---------- Autocomplete dinâmico de aeroportos (mundo todo, via Duffel) ---------- */
+function setupAutocomplete(inputId, boxId){
+  const input = document.getElementById(inputId);
+  const box = document.getElementById(boxId);
+  let debounceTimer = null;
+
+  function close(){
+    box.classList.remove('open');
+    box.innerHTML = '';
+  }
+
+  function renderList(matches){
+    if(matches.length === 0){
+      box.innerHTML = '<div class="no-match">Nenhum aeroporto encontrado</div>';
+    } else {
+      box.innerHTML = matches.map(a =>
+        `<div class="suggestion-item" data-city="${a.city}" data-code="${a.code}">
+          <span class="suggestion-city">${a.city}</span>
+          <span class="suggestion-code">${a.code}</span>
+        </div>`
+      ).join('');
+    }
+    box.classList.add('open');
+  }
+
+  async function search(query){
+    const q = query.trim();
+    if(q.length < 2){
+      renderList(fallbackAirports.slice(0, 8));
+      return;
+    }
+    try {
+      const res = await fetch(`/.netlify/functions/search-airports?query=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if(data.airports && data.airports.length > 0){
+        renderList(data.airports);
+      } else {
+        const localMatches = fallbackAirports.filter(a =>
+          a.city.toLowerCase().includes(q.toLowerCase()) || a.code.toLowerCase().includes(q.toLowerCase())
+        );
+        renderList(localMatches);
+      }
+    } catch(err){
+      const localMatches = fallbackAirports.filter(a =>
+        a.city.toLowerCase().includes(q.toLowerCase()) || a.code.toLowerCase().includes(q.toLowerCase())
+      );
+      renderList(localMatches);
+    }
+  }
+
+  input.addEventListener('focus', () => search(input.value));
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => search(input.value), 300);
+  });
+  input.addEventListener('blur', () => setTimeout(close, 150));
+
+  box.addEventListener('mousedown', (e) => {
+    const item = e.target.closest('.suggestion-item');
+    if(!item) return;
+    input.value = `${item.dataset.city} (${item.dataset.code})`;
+    close();
+  });
+}
+
+/* ---------- Tipo de viagem (ida / ida e volta) ---------- */
+function updateTripTypeUI(){
+  const type = document.querySelector('input[name="tripType"]:checked').value;
+  document.getElementById('campoVolta').style.display = type === 'roundtrip' ? 'block' : 'none';
+  document.getElementById('labelOneWay').classList.toggle('active', type === 'oneway');
+  document.getElementById('labelRoundtrip').classList.toggle('active', type === 'roundtrip');
+}
+document.querySelectorAll('input[name="tripType"]').forEach(r => r.addEventListener('change', updateTripTypeUI));
+
+/* ---------- Botão de voltar pra home / nova busca ---------- */
+function resetToHome(){
+  document.getElementById('origem').value = '';
+  document.getElementById('destino').value = '';
+  document.getElementById('dataIda').value = '';
+  document.getElementById('dataVolta').value = '';
+  document.querySelector('input[name="tripType"][value="oneway"]').checked = true;
+  updateTripTypeUI();
+  setStatus(null);
+  document.getElementById('homeBtn').classList.remove('visible');
+  render(sortList(dealsData, document.getElementById('sortSelect').value));
+}
+document.getElementById('brandHome').addEventListener('click', resetToHome);
+document.getElementById('homeBtn').addEventListener('click', resetToHome);
+
+/* ---------- Renderização dos cards ---------- */
 function render(list){
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -467,7 +509,7 @@ function render(list){
     const isReal = d.isReal === true;
     const bookButton = d.bookingUrl
       ? `<a class="book-btn" href="${d.bookingUrl}" target="_blank" rel="noopener">Reservar essa oferta</a>`
-      : `<button class="book-btn disabled" disabled title="Link de reserva chega na próxima etapa (checkout ou afiliado)">Reservar essa oferta</button>`;
+      : `<button class="book-btn disabled" disabled title="Link de reserva chega quando a busca for real">Reservar essa oferta</button>`;
 
     const priceBlock = isReal
       ? `<span class="new-price">${formatBRL(d.newPrice)}</span>`
@@ -502,101 +544,6 @@ function render(list){
   });
 }
 
-function setStatus(message, isError){
-  const box = document.getElementById('statusMsg');
-  if(!message){
-    box.style.display = 'none';
-    return;
-  }
-  box.textContent = message;
-  box.className = 'status-msg' + (isError ? ' error' : '');
-  box.style.display = 'block';
-}
-
-function extractCode(fieldValue){
-  const match = fieldValue.match(/\(([A-Z]{3})\)/);
-  return match ? match[1] : fieldValue.trim().toUpperCase();
-}
-
-function buildAffiliateUrl(origin, destination, isoDate){
-  if(!origin || !destination || !isoDate) return null;
-  const [year, month, day] = isoDate.split('-');
-  const ddmm = day + month;
-  const searchPath = `${origin}${ddmm}${destination}1`;
-  const target = `https://www.aviasales.com/search/${searchPath}`;
-  return `https://tp.media/r?campaign_id=100&marker=752265&p=4114&trs=551566&u=${encodeURIComponent(target)}`;
-}
-
-async function applyFilters(){
-  const origemVal = document.getElementById('origem').value.trim();
-  const destinoVal = document.getElementById('destino').value.trim();
-  const dataVal = document.getElementById('dataIda').value;
-  const sortBy = document.getElementById('sortSelect').value;
-
-  // Sem origem + data preenchidas, mostra os exemplos locais (não dá pra buscar de verdade sem isso)
-  if(!origemVal || !dataVal){
-    setStatus(null);
-    let list = dealsData.filter(d => {
-      const okOrigem = !origemVal || d.origin.toLowerCase().includes(origemVal.toLowerCase());
-      const okDestino = !destinoVal || d.destination.toLowerCase().includes(destinoVal.toLowerCase());
-      return okOrigem && okDestino;
-    });
-    list = sortList(list, sortBy);
-    render(list);
-    return;
-  }
-
-  setStatus('Buscando ofertas reais...', false);
-  document.getElementById('btnBuscar').disabled = true;
-
-  try {
-    const response = await fetch('/.netlify/functions/search-flights', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        origin: extractCode(origemVal),
-        destination: destinoVal ? extractCode(destinoVal) : undefined,
-        departureDate: dataVal,
-      }),
-    });
-
-    const data = await response.json();
-
-    if(!response.ok){
-      throw new Error(data.error || 'Erro na busca');
-    }
-
-    let offers = (data.offers || []).map(o => ({
-      origin: o.origin,
-      destination: o.destination,
-      airline: o.airline || 'Companhia não informada',
-      depart: o.depart ? new Date(o.depart).toLocaleString('pt-BR') : '-',
-      ret: null,
-      newPrice: o.price,
-      bookingUrl: buildAffiliateUrl(o.origin, o.destination, dataVal),
-      isReal: true,
-      expiresHours: 0,
-      oldPrice: null,
-    }));
-
-    offers = sortList(offers, sortBy);
-
-    if(offers.length === 0){
-      setStatus('Nenhuma oferta encontrada pra essa busca no sandbox da Duffel. Tenta outra data ou rota.', true);
-    } else {
-      setStatus(`${offers.length} ofertas reais encontradas (modo sandbox/teste da Duffel).`, false);
-    }
-    render(offers);
-
-  } catch (err) {
-    setStatus('Não consegui buscar dados reais agora (' + err.message + '). Mostrando os exemplos por enquanto.', true);
-    let list = dealsData;
-    render(sortList(list, sortBy));
-  } finally {
-    document.getElementById('btnBuscar').disabled = false;
-  }
-}
-
 function sortList(list, sortBy){
   list = list.slice();
   if(sortBy === 'preco'){
@@ -613,14 +560,90 @@ function sortList(list, sortBy){
   return list;
 }
 
+/* ---------- Busca principal ---------- */
+async function applyFilters(){
+  const origemVal = document.getElementById('origem').value.trim();
+  const destinoVal = document.getElementById('destino').value.trim();
+  const dataVal = document.getElementById('dataIda').value;
+  const tripType = document.querySelector('input[name="tripType"]:checked').value;
+  const dataVoltaVal = tripType === 'roundtrip' ? document.getElementById('dataVolta').value : null;
+  const sortBy = document.getElementById('sortSelect').value;
+
+  if(!origemVal || !dataVal){
+    setStatus(null);
+    let list = dealsData.filter(d => {
+      const okOrigem = !origemVal || d.origin.toLowerCase().includes(origemVal.toLowerCase());
+      const okDestino = !destinoVal || d.destination.toLowerCase().includes(destinoVal.toLowerCase());
+      return okOrigem && okDestino;
+    });
+    render(sortList(list, sortBy));
+    document.getElementById('homeBtn').classList.remove('visible');
+    return;
+  }
+
+  setStatus('Buscando ofertas reais...', false);
+  document.getElementById('btnBuscar').disabled = true;
+  document.getElementById('homeBtn').classList.add('visible');
+
+  try {
+    const originCode = extractCode(origemVal);
+    const destinationCode = destinoVal ? extractCode(destinoVal) : undefined;
+
+    const response = await fetch('/.netlify/functions/search-flights', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        origin: originCode,
+        destination: destinationCode,
+        departureDate: dataVal,
+        returnDate: dataVoltaVal || undefined,
+      }),
+    });
+
+    const data = await response.json();
+
+    if(!response.ok){
+      throw new Error(data.error || 'Erro na busca');
+    }
+
+    let offers = (data.offers || []).map(o => ({
+      origin: o.origin,
+      destination: o.destination,
+      airline: o.airline || 'Companhia não informada',
+      depart: o.depart ? new Date(o.depart).toLocaleString('pt-BR') : '-',
+      ret: null,
+      newPrice: o.price,
+      bookingUrl: buildAffiliateUrl(o.origin, o.destination, dataVal, dataVoltaVal),
+      isReal: true,
+      expiresHours: 0,
+      oldPrice: null,
+    }));
+
+    offers = sortList(offers, sortBy);
+
+    if(offers.length === 0){
+      setStatus('Nenhuma oferta encontrada pra essa busca no sandbox da Duffel. Tenta outra data ou rota.', true);
+    } else {
+      setStatus(`${offers.length} ofertas reais encontradas (modo sandbox/teste da Duffel).`, false);
+    }
+    render(offers);
+
+  } catch (err) {
+    setStatus('Não consegui buscar dados reais agora (' + err.message + '). Mostrando os exemplos por enquanto.', true);
+    render(sortList(dealsData, sortBy));
+  } finally {
+    document.getElementById('btnBuscar').disabled = false;
+  }
+}
+
 document.getElementById('btnBuscar').addEventListener('click', applyFilters);
-document.getElementById('sortSelect').addEventListener('change', applyFilters);
+document.getElementById('sortSelect').addEventListener('change', () => applyFilters());
 document.getElementById('origem').addEventListener('keydown', e => { if(e.key === 'Enter') applyFilters(); });
 document.getElementById('destino').addEventListener('keydown', e => { if(e.key === 'Enter') applyFilters(); });
 
 setupAutocomplete('origem', 'origemSuggestions');
 setupAutocomplete('destino', 'destinoSuggestions');
-
+updateTripTypeUI();
 render(dealsData);
 </script>
 </body>
