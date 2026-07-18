@@ -397,7 +397,7 @@ function buildAffiliateUrl(origin, destination, departDate, returnDate){
     searchPath += (d2 + m2);
   }
   searchPath += '1';
-  const target = `https://www.aviasales.com/search/${searchPath}`;
+  const target = `https://www.aviasales.com/search/${searchPath}?currency=brl`;
   return `https://tp.media/r?campaign_id=100&marker=752265&p=4114&trs=551566&u=${encodeURIComponent(target)}`;
 }
 
