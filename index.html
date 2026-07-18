@@ -39,12 +39,9 @@
   .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px;}
 
   /* Header */
-  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;cursor:pointer;width:fit-content;}
-  .brand:hover .bolt{transform:rotate(-8deg);}
-  .bolt{width:26px;height:26px;flex-shrink:0;transition:transform .15s ease;}
-  .brand h1{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin:0;letter-spacing:-0.01em;}
-  .header-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
-  .tagline{color:var(--muted);font-size:14px;margin:0 0 24px;}
+  .logo-img{max-width:340px;width:100%;height:auto;display:block;}
+  .header-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+  .brand{cursor:pointer;}
 
   .home-btn{
     display:none;
@@ -274,14 +271,10 @@
 
   <div class="header-row">
     <div class="brand" id="brandHome">
-      <svg class="bolt" viewBox="0 0 24 24" fill="none">
-        <path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" fill="#2E8CFF"/>
-      </svg>
-      <h1>Voo Relâmpago</h1>
+      <img class="logo-img" src="logo.png" alt="Voo Relâmpago" />
     </div>
     <button class="home-btn" id="homeBtn">&larr; Nova busca</button>
   </div>
-  <p class="tagline">Ofertas de última hora que as companhias aéreas precisam vender agora</p>
 
   <div class="search">
     <div class="trip-type">
