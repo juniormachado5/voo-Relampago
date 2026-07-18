@@ -6,7 +6,7 @@ exports.handler = async function (event) {
     return { statusCode: 405, body: JSON.stringify({ error: 'Método não permitido' }) };
   }
 
-  const { origin, destination, departureDate } = JSON.parse(event.body || '{}');
+  const { origin, destination, departureDate, returnDate } = JSON.parse(event.body || '{}');
 
   if (!origin || !departureDate) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Origem e data de partida são obrigatórios' }) };
@@ -19,6 +19,22 @@ exports.handler = async function (event) {
   }
 
   try {
+    const slices = [
+      {
+        origin: origin,
+        destination: destination || undefined,
+        departure_date: departureDate,
+      },
+    ];
+
+    if (returnDate && destination) {
+      slices.push({
+        origin: destination,
+        destination: origin,
+        departure_date: returnDate,
+      });
+    }
+
     const duffelResponse = await fetch('https://api.duffel.com/air/offer_requests?return_offers=true', {
       method: 'POST',
       headers: {
@@ -28,13 +44,7 @@ exports.handler = async function (event) {
       },
       body: JSON.stringify({
         data: {
-          slices: [
-            {
-              origin: origin,
-              destination: destination || undefined,
-              departure_date: departureDate,
-            },
-          ],
+          slices: slices,
           passengers: [{ type: 'adult' }],
           cabin_class: 'economy',
         },
